@@ -11,7 +11,7 @@ class PaymentController < ApplicationController
   def create
     # Set the API endpoint
     endpoint = 'https://api.paymongo.com/v1/checkout_sessions'
-    api_key = ENV["PAYMONGO_SK_API_KEY"]
+    api_key = ENV['PAYMONGO_SK_API_KEY']
 
     # Set the request headers
     headers = {
