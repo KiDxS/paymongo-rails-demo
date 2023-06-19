@@ -77,3 +77,5 @@ end
 gem "devise", "~> 4.9"
 
 gem "httparty", "~> 0.21.0"
+
+gem "dotenv-rails", "~> 2.8"
