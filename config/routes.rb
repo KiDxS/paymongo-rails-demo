@@ -4,7 +4,6 @@ Rails.application.routes.draw do
     get '/', to: 'payment#index', as: 'access_page'
     get 'webhook', to: 'payment#webhook', as: 'access_webhook'
     get 'create', to: 'payment#create', as: 'buy_access'
-    get 'success', to: 'payment#success', as: 'buy_access_success'
     get 'cancel', to: 'payment#cancel', as: 'buy_access_cancel'
   end
 
