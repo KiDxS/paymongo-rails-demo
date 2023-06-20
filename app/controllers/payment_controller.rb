@@ -41,11 +41,6 @@ class PaymentController < ApplicationController
     redirect_to checkout_url, allow_other_host: true
   end
 
-  def success
-    current_user.update(paid: true)
-    redirect_to root_path
-  end
-
   def cancel
     if current_user.payment.present?
       current_user.payment.destroy
