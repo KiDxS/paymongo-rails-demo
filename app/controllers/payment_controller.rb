@@ -1,6 +1,8 @@
 class PaymentController < ApplicationController
+  include PaymongoService
   before_action :authenticate_user!
-  before_action :user_paid_yet?, only: [:new, :create]
+  before_action :if_user_has_not_paid_yet, only: %i[new]
+  before_action :dont_allow_paid_users_to_pay_again, only: %i[create]
   # Saving the checkout session_id to the database flow
   # 1. When a checkout_session is created, save it into the database and attach it to the user with the status "ongoing".
   # 2. If a cancel happens, delete the session from the database by accessing the user's relationship.
@@ -8,57 +10,33 @@ class PaymentController < ApplicationController
 
   def index; end
 
+  def webhook
+    puts request
+    if request.headers['Paymongo-Signature']
+      checkout_session_id = request['data']['id']
+      @payment = Payment.find_by(checkout_session: checkout_session_id)
+      @user = User.find(@payment.user_id)
+      @user.update(paid: true)
+      head :no_content
+    end
+    head :bad_request
+  end
+
   def create
-    # Set the API endpoint
-    endpoint = 'https://api.paymongo.com/v1/checkout_sessions'
-    api_key = ENV['PAYMONGO_SK_API_KEY']
+    paymongo_data = create_checkout_session
 
-    # Set the request headers
-    headers = {
-      'accept' => 'application/json',
-      'Content-Type' => 'application/json',
-      'authorization' => "Basic #{api_key}"
-    }
-    # Set the request body
-    body = {
-      data: {
-        attributes: {
-          line_items: [
-            {
-              currency: 'PHP',
-              amount: 10000,
-              description: 'Access to the website',
-              quantity: 1,
-              name: 'Access'
-            }
-          ],
-          payment_method_types: ['gcash'],
-          send_email_receipt: false,
-          show_description: true,
-          show_line_items: true,
-          cancel_url: 'http://localhost:3000/payment/cancel',
-          description: 'Buy access to the website',
-          success_url: 'http://localhost:3000/payment/success'
-        }
-      }
-    }
-
-    # Make the request
-    response = HTTParty.post(endpoint, headers: headers, body: body.to_json)
-
-    # Print the response body
-    puts response.body
-    # Get the checkout_url from the response
-    checkout_url = response['data']['attributes']['checkout_url']
+    # # Print the response body
+    # puts response.body
+    # Get the checkout_url from the data
+    checkout_url = paymongo_data['data']['attributes']['checkout_url']
 
     # Get the session_id
-    checkout_session_id = response['data']['id']
+    checkout_session_id = paymongo_data['data']['id']
     if current_user.payment.present?
       current_user.payment.update(checkout_session: checkout_session_id)
     else
       current_user.create_payment(checkout_session: checkout_session_id)
     end
- 
     # Redirect to the checkout_url
     redirect_to checkout_url, allow_other_host: true
   end
@@ -72,7 +50,6 @@ class PaymentController < ApplicationController
     if current_user.payment.present?
       current_user.payment.destroy
     end
-    redirect_to  access_page_path
+    redirect_to access_page_path
   end
-  
 end
