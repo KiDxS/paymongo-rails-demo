@@ -28,3 +28,10 @@ Things you may want to cover:
 - [x] Create a checkout session
 - [ ] Create a webhook
 - [ ] If a `checkout_session.payment.paid` event notification is sent, retrieve the session id and set the `status` to `paid` in the payments table.
+
+## Credentials
+
+```
+  user@mail.com:user123
+  test@mail.com:test123
+```
