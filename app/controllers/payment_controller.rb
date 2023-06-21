@@ -1,8 +1,8 @@
 class PaymentController < ApplicationController
   include PaymongoService
   before_action :authenticate_user!
-  before_action :if_user_has_not_paid_yet, only: %i[new]
-  before_action :dont_allow_paid_users_to_pay_again, only: %i[create]
+  before_action :redirect_unpaid_users, only: %i[new]
+  before_action :redirect_paid_users, only: %i[create]
   # Saving the checkout session_id to the database flow
   # 1. When a checkout_session is created, save it into the database and attach it to the user with the status "ongoing".
   # 2. If a cancel happens, delete the session from the database by accessing the user's relationship.
